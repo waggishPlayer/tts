@@ -1,4 +1,4 @@
-import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon } from 'lucide-react';
+import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon, Mic } from 'lucide-react';
 import React from 'react';
 
 export interface Tool {
@@ -105,6 +105,16 @@ export const tools: Tool[] = [
     category: 'media',
     color: 'text-lime-600',
     gradient: 'from-lime-500 to-green-500',
+  },
+  {
+    id: 'stt',
+    name: 'Speech to Text',
+    description: 'Transcribe audio or video to text using advanced AI models.',
+    icon: Mic,
+    path: '/stt',
+    category: 'media',
+    color: 'text-pink-600',
+    gradient: 'from-pink-500 to-red-500',
   }
 ];
 

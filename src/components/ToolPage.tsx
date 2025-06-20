@@ -83,32 +83,33 @@ export function ToolPage() {
                 This is where the {tool.name.toLowerCase()} functionality would be implemented.
                 The interface would include input fields, controls, and results display.
               </p>
-              
-              {/* Sample Interface Elements */}
-              <div className="space-y-4 max-w-md mx-auto">
-                <div className="text-left">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Input
-                  </label>
-                  <textarea
-                    placeholder={`Enter your ${tool.category} here...`}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    rows={4}
+              {/* Speech to Text Tool Interface */}
+              {tool.id === 'stt' ? (
+                <SpeechToTextInterface />
+              ) : (
+                <div className="space-y-4 max-w-md mx-auto">
+                  <div className="text-left">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Input
+                    </label>
+                    <textarea
+                      placeholder={`Enter your ${tool.category} here...`}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      rows={4}
+                      disabled
+                    />
+                  </div>
+                  <button
                     disabled
-                  />
+                    className="w-full py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium opacity-50 cursor-not-allowed"
+                  >
+                    Process with AI
+                  </button>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Connect your AI API to enable this functionality
+                  </div>
                 </div>
-                
-                <button
-                  disabled
-                  className="w-full py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium opacity-50 cursor-not-allowed"
-                >
-                  Process with AI
-                </button>
-                
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Connect your AI API to enable this functionality
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -166,6 +167,79 @@ export function ToolPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SpeechToTextInterface() {
+  const [file, setFile] = React.useState<File | null>(null);
+  const [transcript, setTranscript] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // TODO: Replace with your actual API key logic
+  const API_KEY = localStorage.getItem('tts_api_key') || '';
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] || null);
+    setTranscript(null);
+    setError(null);
+  };
+
+  const handleTranscribe = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+    setTranscript(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/transcribe', {
+        method: 'POST',
+        headers: {
+          'X-API-Key': API_KEY,
+        },
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error(`Error: ${res.status}`);
+      }
+      const data = await res.json();
+      setTranscript(data.transcript);
+    } catch (err: any) {
+      setError(err.message || 'Failed to transcribe.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-md mx-auto">
+      <div className="text-left">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Upload Audio or Video File
+        </label>
+        <input
+          type="file"
+          accept="audio/*,video/*"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        />
+      </div>
+      <button
+        onClick={handleTranscribe}
+        disabled={!file || loading}
+        className="w-full py-3 px-6 bg-gradient-to-r from-pink-600 to-red-500 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Transcribing…' : 'Transcribe'}
+      </button>
+      {error && <div className="text-red-600 dark:text-red-400">{error}</div>}
+      {transcript && (
+        <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-left whitespace-pre-wrap text-gray-900 dark:text-white max-h-96 overflow-y-auto">
+          <strong>Transcript:</strong>
+          <div className="mt-2">{transcript}</div>
+        </div>
+      )}
     </div>
   );
 }

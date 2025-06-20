@@ -19,6 +19,12 @@ import io
 import os
 import uuid
 from tempfile import NamedTemporaryFile
+from pathlib import Path
+import tempfile
+import shutil
+import gc
+from faster_whisper import WhisperModel
+import subprocess
 
 import pyttsx3
 from fastapi import FastAPI, Header, HTTPException, UploadFile, status
@@ -409,6 +415,49 @@ async def show_key():
 async def health():
     """Health‑check endpoint."""
     return {"status": "ok"}
+
+@app.post("/transcribe", tags=["STT"])
+async def transcribe(
+    file: UploadFile,
+    x_api_key: str | None = Header(default=None),
+    device: str = "cpu"
+):
+    """Transcribe an audio or video file to text using Whisper."""
+    _verify_key(x_api_key)
+    # Save uploaded file to a temp location
+    with tempfile.TemporaryDirectory() as td:
+        tmpdir = Path(td)
+        input_path = tmpdir / file.filename
+        with open(input_path, "wb") as f:
+            f.write(await file.read())
+        # Extract audio to wav (mono, 16kHz)
+        def extract_audio(video: Path, wav: Path, duration: int | None = None):
+            cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(video),
+                   "-ac", "1", "-ar", "16000", "-vn"]
+            if duration:
+                cmd += ["-t", str(duration)]
+            cmd.append(str(wav))
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        full_wav = tmpdir / "audio_full.wav"
+        sample_wav = tmpdir / "audio_30s.wav"
+        extract_audio(input_path, full_wav)
+        extract_audio(input_path, sample_wav, 30)
+        # Detect language
+        tiny = WhisperModel("tiny", device=device, compute_type="int8")
+        segments, info = tiny.transcribe(str(sample_wav), language=None, beam_size=1)
+        lang = info.language or "en"
+        tiny = None
+        gc.collect()
+        # Remove tiny model cache
+        cache = Path.home() / ".cache" / "huggingface" / "hub"
+        for p in cache.glob("**/openai--whisper-tiny*"):
+            shutil.rmtree(p, ignore_errors=True)
+        # Transcribe full audio
+        model_id = "small.en" if lang == "en" else "small"
+        small = WhisperModel(model_id, device=device, compute_type="int8")
+        segments, _ = small.transcribe(str(full_wav), language=lang, beam_size=5, vad_filter=True)
+        transcript = " ".join(s.text.strip() for s in segments)
+    return {"transcript": transcript, "language": lang}
 
 # ---------------------------------------------------------------------------
 # ─── Uvicorn Entry‑Point ---------------------------------------------------
