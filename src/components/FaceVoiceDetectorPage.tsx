@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Eye, Upload, Play, RotateCw, CheckCircle, XCircle, Info, Users, Volume2 } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface DetectionResult {
   faces_detected: boolean;
@@ -48,7 +49,7 @@ const FaceVoiceDetectorPage: React.FC = () => {
       const formData = new FormData();
       formData.append('video', videoFile);
 
-      const response = await fetch('http://localhost:5000/api/detector/analyze', {
+      const response = await fetch(API_ENDPOINTS.DETECTOR_ANALYZE, {
         method: 'POST',
         body: formData,
       });

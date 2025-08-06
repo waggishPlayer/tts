@@ -1,4 +1,4 @@
-import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon, Mic, Target, Eye, Headphones } from 'lucide-react';
+import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon, Mic, Target, Eye, Headphones, Search, Palette, User } from 'lucide-react';
 import React from 'react';
 
 export interface Tool {
@@ -135,6 +135,47 @@ export const tools: Tool[] = [
     category: 'media',
     color: 'text-amber-600',
     gradient: 'from-amber-500 to-orange-500',
+  },
+  // New utilities
+  {
+    id: 'object-detection',
+    name: 'Object Detection',
+    description: 'Detect and identify objects in images using advanced computer vision AI.',
+    icon: Search,
+    path: '/object-detection',
+    category: 'media',
+    color: 'text-red-600',
+    gradient: 'from-red-500 to-pink-500',
+  },
+  {
+    id: 'text-translator',
+    name: 'Smart Text Translator',
+    description: 'Translate text between 70+ languages with high accuracy and context awareness.',
+    icon: Languages,
+    path: '/text-translator',
+    category: 'text',
+    color: 'text-teal-600',
+    gradient: 'from-teal-500 to-cyan-500',
+  },
+  {
+    id: 'text-to-image-generator',
+    name: 'AI Image Generator',
+    description: 'Create beautiful images from text prompts using state-of-the-art AI models.',
+    icon: Palette,
+    path: '/text-to-image-generator',
+    category: 'media',
+    color: 'text-fuchsia-600',
+    gradient: 'from-fuchsia-500 to-purple-500',
+  },
+  {
+    id: 'video-to-profile',
+    name: 'Video to Profile Picture',
+    description: 'Extract perfect profile pictures from videos with face detection and enhancement.',
+    icon: User,
+    path: '/video-to-profile',
+    category: 'media',
+    color: 'text-emerald-600',
+    gradient: 'from-emerald-500 to-green-500',
   }
 ];
 

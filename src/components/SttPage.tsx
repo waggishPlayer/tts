@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Mic, Upload, FileAudio, Play, Square, RotateCw, Download, Languages, Info } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 const SttPage: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -85,8 +86,8 @@ const SttPage: React.FC = () => {
       formData.append('audio', wavBlob, 'audio.wav');
 
       const endpoint = selectedLanguage === 'auto' 
-        ? 'http://localhost:5000/api/stt/transcribe'
-        : `http://localhost:5000/api/stt/transcribe/${selectedLanguage}`;
+        ? API_ENDPOINTS.STT_TRANSCRIBE
+        : API_ENDPOINTS.STT_TRANSCRIBE_LANG(selectedLanguage);
 
       const response = await fetch(endpoint, {
         method: 'POST',

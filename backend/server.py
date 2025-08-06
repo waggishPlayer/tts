@@ -155,6 +155,209 @@ def detect_face_and_voice():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Object Detection Routes
+@app.route('/api/object-detection/analyze', methods=['POST'])
+def detect_objects_in_image():
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No image file selected'}), 400
+        
+        # Check file extension
+        allowed_image_extensions = {'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'webp'}
+        if not file.filename.lower().endswith(tuple(f'.{ext}' for ext in allowed_image_extensions)):
+            return jsonify({'error': 'Image file type not supported'}), 400
+        
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        timestamp = str(int(time.time()))
+        unique_filename = f"{timestamp}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        try:
+            # Import and run object detection
+            from ObjectDetection.detector import ObjectDetector
+            
+            detector = ObjectDetector()
+            result = detector.detect_objects(file_path)
+            
+            if result.get('success'):
+                # Optionally create annotated image
+                annotated_path = os.path.join(app.config['UPLOAD_FOLDER'], f"annotated_{unique_filename}")
+                if detector.draw_detections(file_path, annotated_path):
+                    # Convert annotated image to base64
+                    import base64
+                    with open(annotated_path, 'rb') as img_file:
+                        annotated_image_base64 = base64.b64encode(img_file.read()).decode()
+                    result['annotated_image'] = annotated_image_base64
+                    os.remove(annotated_path)  # Clean up
+                
+                return jsonify(result)
+            else:
+                return jsonify(result), 500
+                
+        except Exception as e:
+            return jsonify({'error': f'Object detection failed: {str(e)}'}), 500
+        
+        finally:
+            # Clean up uploaded file
+            try:
+                os.remove(file_path)
+            except:
+                pass
+                
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Text Translation Routes
+@app.route('/api/text-translator/translate', methods=['POST'])
+def translate_text():
+    try:
+        data = request.get_json()
+        
+        if not data or 'text' not in data:
+            return jsonify({'error': 'No text provided'}), 400
+        
+        text = data['text']
+        source_lang = data.get('source_lang', 'auto')
+        target_lang = data.get('target_lang', 'en')
+        
+        # Import and run translation
+        from TextTranslator.translator import TextTranslator
+        
+        translator = TextTranslator()
+        result = translator.translate(text, source_lang, target_lang)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': f'Translation failed: {str(e)}'}), 500
+
+@app.route('/api/text-translator/languages', methods=['GET'])
+def get_supported_languages():
+    try:
+        from TextTranslator.translator import TextTranslator
+        
+        translator = TextTranslator()
+        languages = translator.get_supported_languages()
+        
+        return jsonify({
+            'success': True,
+            'languages': languages
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get languages: {str(e)}'}), 500
+
+# Text to Image Routes
+@app.route('/api/text-to-image/generate', methods=['POST'])
+def generate_image_from_text():
+    try:
+        data = request.get_json()
+        
+        if not data or 'prompt' not in data:
+            return jsonify({'error': 'No prompt provided'}), 400
+        
+        prompt = data['prompt']
+        style = data.get('style', 'realistic')
+        size = data.get('size', 'square')
+        model = data.get('model', 'auto')
+        
+        # Import and run image generation
+        from TextToImage.generator import TextToImageGenerator
+        
+        generator = TextToImageGenerator()
+        result = generator.generate_image(prompt, style, size, model)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'error': f'Image generation failed: {str(e)}'}), 500
+
+@app.route('/api/text-to-image/options', methods=['GET'])
+def get_image_generation_options():
+    try:
+        from TextToImage.generator import TextToImageGenerator
+        
+        generator = TextToImageGenerator()
+        
+        return jsonify({
+            'success': True,
+            'styles': generator.get_supported_styles(),
+            'sizes': generator.get_supported_sizes()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get options: {str(e)}'}), 500
+
+# Video to Profile Picture Routes
+@app.route('/api/video-to-profile/convert', methods=['POST'])
+def convert_video_to_profile_picture():
+    try:
+        if 'video' not in request.files:
+            return jsonify({'error': 'No video file provided'}), 400
+        
+        file = request.files['video']
+        if file.filename == '':
+            return jsonify({'error': 'No video file selected'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Video file type not supported'}), 400
+        
+        # Get optional parameters
+        output_size = request.form.get('output_size', 'medium')
+        circular_crop = request.form.get('circular_crop', 'true').lower() == 'true'
+        enhance = request.form.get('enhance', 'true').lower() == 'true'
+        
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        timestamp = str(int(time.time()))
+        unique_filename = f"{timestamp}_{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(file_path)
+        
+        try:
+            # Import and run video processing
+            from videoToProfilePicture.converter import VideoToProfilePictureConverter
+            
+            converter = VideoToProfilePictureConverter()
+            result = converter.process_video(file_path, output_size, circular_crop, enhance)
+            
+            return jsonify(result)
+            
+        except Exception as e:
+            return jsonify({'error': f'Video processing failed: {str(e)}'}), 500
+        
+        finally:
+            # Clean up uploaded file
+            try:
+                os.remove(file_path)
+            except:
+                pass
+                
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/video-to-profile/options', methods=['GET'])
+def get_video_processing_options():
+    try:
+        from videoToProfilePicture.converter import VideoToProfilePictureConverter
+        
+        converter = VideoToProfilePictureConverter()
+        
+        return jsonify({
+            'success': True,
+            'supported_formats': converter.get_supported_formats(),
+            'output_sizes': converter.get_output_sizes()
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get options: {str(e)}'}), 500
+
 # Speech to Text Routes
 @app.route('/api/stt/transcribe', methods=['POST'])
 def transcribe_audio():

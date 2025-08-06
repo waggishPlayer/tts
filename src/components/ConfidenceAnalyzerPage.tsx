@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Target, Upload, Play, RotateCw, Download, BarChart3, Info, Eye, Mic2, Users, Volume2 } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 interface AnalysisResult {
   overall_score: number;
@@ -58,7 +59,7 @@ const ConfidenceAnalyzerPage: React.FC = () => {
       const formData = new FormData();
       formData.append('video', videoFile);
 
-      const response = await fetch('http://localhost:5000/api/confidence/analyze', {
+      const response = await fetch(API_ENDPOINTS.CONFIDENCE_ANALYZE, {
         method: 'POST',
         body: formData,
       });

@@ -179,7 +179,10 @@ def transcribe_with_language(lang):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
     print("Starting AI Utilities Demo Server...")
     print("This is a demo server that returns mock data for testing the frontend.")
     print("For full functionality, you would need to install the required Python packages.")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f"Server running on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
