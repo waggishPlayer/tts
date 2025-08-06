@@ -1,4 +1,4 @@
-import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon, Mic } from 'lucide-react';
+import { MessageSquare, Image, Languages, FileText, Sparkles, Code, Music, Video, LucideIcon, Mic, Target, Eye, Headphones } from 'lucide-react';
 import React from 'react';
 
 export interface Tool {
@@ -115,6 +115,26 @@ export const tools: Tool[] = [
     category: 'media',
     color: 'text-pink-600',
     gradient: 'from-pink-500 to-red-500',
+  },
+  {
+    id: 'confidence-analyzer',
+    name: 'Confidence Analyzer',
+    description: 'Analyze your speaking confidence and presentation skills from video recordings.',
+    icon: Target,
+    path: '/confidence-analyzer',
+    category: 'productivity',
+    color: 'text-violet-600',
+    gradient: 'from-violet-500 to-purple-500',
+  },
+  {
+    id: 'face-voice-detector',
+    name: 'Face & Voice Detector',
+    description: 'Detect faces and voice activity in video files for content analysis.',
+    icon: Eye,
+    path: '/face-voice-detector',
+    category: 'media',
+    color: 'text-amber-600',
+    gradient: 'from-amber-500 to-orange-500',
   }
 ];
 
